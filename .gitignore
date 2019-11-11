@@ -1,2 +1,4 @@
 *.out
-include/*.out
+*.o
+*.gch
+.vscode/
