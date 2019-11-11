@@ -14,7 +14,7 @@ ieee754 double_to_ieee754(double x){
 }
 
 double ieee754_to_double(ieee754 number){
-  return (number.signif * pow(-1,number.sign) * pow(2,number.exp));
+  return ((1 + number.signif) * pow(-1,number.sign) * pow(2,number.exp));
 }
 
 void print_ieee754(ieee754 number){
