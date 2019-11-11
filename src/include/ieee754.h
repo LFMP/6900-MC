@@ -6,6 +6,7 @@
 
 #define PI 3.141592653589793
 #define PI_sobre_2 1.5707963267948966
+#define E 2.718281828459045
 
 typedef struct ieee754{
   int sign;
