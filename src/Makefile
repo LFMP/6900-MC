@@ -3,10 +3,10 @@ DIROBJETO=./obj
 CC=gcc
 CFLAGS=-I$(DIRINCLUDE) -lm -g
 
-_DEPEND = fatorial.h ieee754.h coss.h sen.h e_x.h
+_DEPEND = fatorial.h ieee754.h coss.h sen.h e_x.h lnd.h
 DEPEND = $(patsubst %,$(DIRINCLUDE)/%,$(_DEPEND))
 
-_OBJETO = main.o coss.o sen.o ieee754.o e_x.o
+_OBJETO = main.o coss.o sen.o ieee754.o e_x.o lnd.o
 OBJETO = $(patsubst %,$(DIROBJETO)/%,$(_OBJETO))
 
 $(DIROBJETO)/%.o: %.c $(DEPEND)
