@@ -1,4 +1,4 @@
-#include "ieee754.h"
+#include "include/ieee754.h"
 
 ieee754 double_to_ieee754(double x){
   ieee754 number;
@@ -21,9 +21,4 @@ void print_ieee754(ieee754 number){
   printf("Sinal: %i\n",number.sign);
   printf("Expoente: %g\n",pow(2,number.exp));
   printf("Mantissa: %e\n",number.signif);
-}
-
-void main(){
-  ieee754 number = double_to_ieee754(6.0);
-  print_ieee754(number);
 }

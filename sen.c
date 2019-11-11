@@ -1,4 +1,5 @@
-#include "sen.h"
+#include "include/sen.h"
+#include "include/coss.h"
 
 void sen(double x, ieee754 *res){
   int y = 0;
@@ -9,10 +10,10 @@ void sen(double x, ieee754 *res){
   if (resto == 0){
     *res = double_to_ieee754(x - (pow(x,3)/fatorial03) + (pow(x,5)/fatorial05) - (pow(x,7)/fatorial07) + (pow(x,9)/fatorial09) - (pow(x,11)/fatorial11));
   }else if(resto == 1){
-    *res = double_to_ieee754(cos(xk));
+    *res = double_to_ieee754(coss(xk));
   }else if(resto == 2){
     *res = double_to_ieee754(-(x - (pow(x,3)/fatorial03) + (pow(x,5)/fatorial05) - (pow(x,7)/fatorial07) + (pow(x,9)/fatorial09) - (pow(x,11)/fatorial11)));
   }else if(resto == 3){
-    *res = double_to_ieee754(- cos(xk));
+    *res = double_to_ieee754(- coss(xk));
   }
 }
