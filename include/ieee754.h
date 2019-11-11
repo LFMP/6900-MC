@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define PI 3.141592653589793
+#define PI_sobre_2 1.5707963267948966
+
 typedef struct ieee754{
   int sign;
   int exp;
