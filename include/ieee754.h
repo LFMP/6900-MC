@@ -5,9 +5,9 @@
 #include <stdlib.h>
 
 typedef struct ieee754{
-  char sign;
-  char exp[12];
-  char signif[53];
+  int sign;
+  int exp;
+  double signif;
 } ieee754;
 
 ieee754 double_to_ieee754(double x);
