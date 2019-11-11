@@ -1,4 +1,4 @@
-#ifndef e
+#ifndef lnd
 #include "fatorial.h"
 #include "ieee754.h"
 #include <math.h>

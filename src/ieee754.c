@@ -13,12 +13,12 @@ ieee754 double_to_ieee754(double x){
   return number;
 }
 
-double ieee754_to_double(ieee754 number){
+long double ieee754_to_double(ieee754 number){
   return ((1 + number.signif) * pow(-1,number.sign) * pow(2,number.exp));
 }
 
 void print_ieee754(ieee754 number){
   printf("Sinal: %i\n",number.sign);
-  printf("Expoente: %g\n",pow(2,number.exp));
-  printf("Mantissa: %e\n",number.signif);
+  printf("Expoente: %i\n",(int)pow(2,number.exp));
+  printf("Mantissa: %0.10lg\n",number.signif);
 }
