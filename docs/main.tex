@@ -1,0 +1,205 @@
+\documentclass[12pt]{article}
+\usepackage{sbc-template}
+\usepackage{graphicx,float,url}
+\usepackage[brazil]{babel}   
+\usepackage[utf8]{inputenc}  
+\usepackage{indentfirst}
+\usepackage{listings}
+\usepackage{amssymb}
+
+\sloppy
+\lstset{numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt,basicstyle=\footnotesize,extendedchars=true,tabsize=2,frame=single, escapeinside={\%*}{*}, captionpos=b,, language=C}
+
+\title{Implementação de funções elementares utilizando redução de argumento}
+
+\author{Luiz Fellipe Machi Pereira\inst{1}}
+
+\address{
+Departamento de Informática -- Universidade Estadual de Maringá (UEM)\\ Maringá -- PR -- Brasil \email{ra103491@uem.br}}
+
+\begin{document} 
+
+\maketitle
+
+\begin{resumo}
+
+Este artigo tem como objetivo tratar da implementação de funções elementares ($seno$, $cosseno$, $e^x$, $ln x$) utilizando os princípios da matemática computacional para reduzir o valor do argumento, aumentando assim a precisão da função computada e diminuindo o tempo necessário para sua execução. Para reduzir o valor do argumento fez-se o uso da estrutura proposta pelo padrão \textit{IEEE-754} e os princípios da redução aditiva e da redução multiplicativa.
+\end{resumo}
+
+\section{Introdução}
+
+Como objetivos da matemática computacional podemos citar a realização da computação numérica com a maior precisão possível e o mínimo tempo de processamento, tais objetivos podem ser alcançados reduzindo a quantidade de operações matemáticas, principalmente as multiplicativas, utilizadas para resolver um problema e diminuindo o valor do argumento utilizando, o que resulta em menor quantidade de erros por truncamento e arredondamento.
+
+A fim de representar a maior faixa de números com ponto flutuante, dada a quantidade disponível de bits, 64 bits, utilizou-se o padrão \textit{IEEE-754}, que define algumas regras a serem seguidas nas operações e representações de números binários com ponto flutuante, este padrão é melhor explicado na Seção~\ref{sec:ieee754}.
+
+Ao reduzir o valor do argumento podemos utilizar séries de Taylor e Maclaurin \footnote{Série de Maclaurin: \url{https://pt.wikipedia.org/wiki/S\%C3\%A9rie_de_Taylor#S\%C3\%A9rie_de_Maclaurin}}, uma vez que sua convergência está ligada ao valor do parâmetro utilizado. A redução do argumento ainda proporciona uma menor propagação do erro ao longo das operações.
+
+\section{Padrão \textit{IEEE-754}}\label{sec:ieee754}
+
+O padrão \textit{IEEE-754} é um conjunto de regras que define como um número binário de ponto flutuante deve ser representado. Qualquer número decimal $x$ pode ser representado por $x=smb^k$, onde $s$ é o sinal, $m$ é a mantissa, $b$ é a base e $k$ o expoente. Porém tal representação pode ser simplificada se representada no padrão \textit{IEEE-754}. O formato de ponto flutuante é formado por três partes, o sinal, o expoente e a mantissa. Um número decimal $x_{10}$ pode ser representado neste padrão da seguinte forma:
+
+$$x_{10} = (-1)^S(M_{10})2^{E_{10} + 1023_{10}}$$
+
+No qual $S$ refere-se ao valor do bit utilizado para o sinal, assim $0$ indica um número positivo e $1$ um número negativo; $M_{10}$ é o valor na base decimal para a mantissa, responsável por guardar a parte fracionária do número $x_{10}$, disponde de 53 bits na versão de 64 bits; e $E_{10} + 1023_{10}$ o valor do expoente, que é enviesado por 1023, ou seja, o menor valor que o expoente assume é $-1022$\footnote{IEEE-754: \url{https://en.wikipedia.org/wiki/IEEE_754}}.
+
+Para obtermos o número representado no padrão \textit{IEEE-754} para o padrão decimal realizamos a operação básica a seguir:
+
+$$X_{10} = (-1)^{S}(1 + M_{10})2^{E-1023}$$
+
+Perceba que conseguimos economizar 1 bit ao esconder o $1$ apresentado na equação acima, uma vez que estará sempre presente, com exceção do caso do $0$. Tal economia resulta no dobro de precisão na representação do número. Perceba também que ao utilizar este padrão operações como multiplicação e divisão por $2$ podem ser substituídas por simples adições e substrações, respectivamente, no expoente, ou seja, para dobrar o valor armazenado basta somar um ao expoente. Além disso ao guardarmos o valor fracionário, podemos utilizá-los no calculo das funções elementares, tal valor tende a produzir um erro menor visto que o valor do argumento utilizado é menor.
+
+\section{Redução do valor do argumento}
+
+A redução do valor do argumento consiste em um técnica no qual, dado um número decimal $x$, este número pode ser representado através de um número $x^*$, tal que $x^*<x$, podemos calcular uma função elementar utilizando $x^*$ no lugar de $x$ tal que o resultado produzido por $f(x^*) \cong f(x)$. Reduzindo o valor de $x$ a $x^*$ e utilizando o padrão \textit{IEEE-754}, conseguimos utilizar a mesma quantidade de bits e representar mais casas decimais, aumentando assim a precisão na hora do cálculo.
+
+\subsubsection{Redução aditiva}
+Podemos calcular o valor de $x^*$ através da redução aditiva com a equação ~\ref{eq:redaditiva}. Para realizar o cálculo devemos arbitrariamente atribuir um valor a constante $c$, este valor deve ser escolhido de tal forma que para qualquer valor de $x$ e $k$ o valor de $x^*$ seja reduzido.
+\begin{equation}\label{eq:redaditiva}
+    x^* = x - kc \;/\; x^*,c \in \mathbb{R} \land k \in \mathbb{Z}
+\end{equation}
+
+\subsubsection{Redução multiplicativa}
+Podemos calcular o valor de $x^*$ através da redução multiplicativa com a equação ~\ref{eq:redmulti}. Para realizar o cálculo devemos arbitrariamente atribuir um valor a constante $c$, este valor deve ser escolhido de tal forma que para qualquer valor de $x$ e $k$ o valor de $x^*$ seja reduzido. Uma vez que o objetivo da matemática computacional é o aumento da precisão, esta forma de redução deve ser utilizada com cautela já que possui maior quantidade de operações multiplicativas, o que propaga com maior rapidez o erro no número calculado.
+\begin{equation}\label{eq:redmulti}
+x^* = \frac{x}{c^{k}} \;/\; x^*,c \in \mathbb{R} \land k \in \mathbb{Z}
+\end{equation}
+
+\section{Metodologia utilizada}
+
+Para implementação dos algoritmos utilizou-se a linguagem e a biblioteca \textit{math.h} como auxílio. As funções foram desenvolvidas com o intuito de possuir pelo menor dez casas decimais de precisão. Para o desenvolvimento das funções $e^x$, $sen$ e $cos$, utilizou-se o método de redução aditiva para reduzir o valor do argumento, por outro lado nas funções $ln$ e $\sqrt{x}$ utilizou-se somente o valor da mantissa do padrão \textit{IEEE-754} como valor de argumento já reduzido.
+
+\section{Resultados produzidos}
+
+A fim de averiguar a eficácia dos algoritmos implementados, testes unitários foram realizados e a diferença entre os valores produzidos pelas funções implementadas e os valores produzidos pela implementação da linguagem foram anotados e confrontados.
+
+\subsection{Erro esperado}
+Para determinar a precisão das Séries de Taylor utilizadas primeiramente devemos assegurar que o argumento usado está dentro do intervalo de segurança, para isso faz-se a redução do valor de argumento. Garantido que o argumento está dentro do intervalo de segurança podemos obter a partir de qual casa decimal o erro é esperado. 
+
+Seja $f(x)$ uma série alternada, por exemplo: $$f(x) = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \frac{x^7}{7!} + \frac{x^9}{9!} - \frac{x^{11}}{11!} +  \ldots$$
+
+Se utilizarmos $n$ termos no cálculo da série, para determinar quantos dígitos de precisão possuímos devemos calcular o termo $n+1$ da série e coloca-lo na representação exponencial normalizada, ou seja:
+
+$$n+1 = k10^{E} /\,\,\,0 < k < 10 \land k \in \mathbb{R} \land E \in \mathbb{N}$$
+
+Dado o termo n+1 representado na forma acima, nos é garantida que possuímos $E-1$ dígitos de precisão calculados na série ao utilizar $n$ termos. Exemplo:
+
+$$f(\frac{\pi}{6}) = x - \frac{(\frac{\pi}{6})^3}{3!} + \frac{(\frac{\pi}{6})^5}{5!} - \frac{(\frac{\pi}{6})^7}{7!} + \frac{(\frac{\pi}{6})^9}{9!} - \frac{(\frac{\pi}{6})^{11}}{11!}$$
+
+$$n+1=\frac{(\frac{\pi}{6})^{13}}{13!} \approx 3.570275861270223 \cdot 10^{-14}$$
+\\
+$\therefore$ Nossa série utilizando $n=6$ dígitos com $x=\frac{\pi}{6}$ produz um resultado confiável até a casa decimal $E - 1= 14 -1= 13$.
+
+\newpage
+\section{Implementação dos algoritmos}
+
+\subsection{Seno e Cosseno}
+
+A redução do valor do argumento por meio de redução aditiva é feito nas linhas 3 e 4, para garantir que o valor encontre-se no intervalo de segurança das séries de Taylor para Seno e Cosseno, $[-\frac{\pi}{4},\frac{\pi}{4}]$, utilizamos a redução a este intervalo, calculado em alguns casos com a função cosseno. A série de Taylor para Seno abaixo foi calculada nas linhas 9 à 11 e 17 à 19, dependendo do caso resultante da entrada, e utilizando 6 termos para garantir precisão de pelo menos 10 dígitos.
+
+$$sen x = \sum_{n=0}^{\infty}{\frac{(-1)^n}{(2n + 1)!}x^{2n+1}}$$
+
+$$cos x = \sum_{n=0}^{\infty}{\frac{(-1)^n}{(2n)!}x^{2n+1}}$$
+
+\begin{lstlisting}[caption={Implementação da função seno em C}]
+void sen(double x, ieee754 *res){
+  int y = 0;
+  int k = (x - y) / PI_sobre_2;
+  double xk = x - k * PI_sobre_2;
+  double resto = k%4;
+
+  if (resto == 0){
+    *res = double_to_ieee754(
+        x - (pow(x,3)/fatorial03) +
+        (pow(x,5)/fatorial05) - (pow(x,7)/fatorial07) 
+        + (pow(x,9)/fatorial09) - (pow(x,11)/fatorial11)
+    );
+  }else if(resto == 1){
+    *res = double_to_ieee754(coss(xk));
+  }else if(resto == 2){
+    *res = double_to_ieee754(
+        -(x - (pow(x,3)/fatorial03) + (pow(x,5)/fatorial05) 
+        - (pow(x,7)/fatorial07) + (pow(x,9)/fatorial09) 
+        - (pow(x,11)/fatorial11))
+    );
+  }else if(resto == 3){
+    *res = double_to_ieee754(- coss(xk));
+  }
+}
+\end{lstlisting}
+
+\newpage
+
+\subsection{Logaritmo natural}
+
+Para reduzir o valor do argumento utilizamos a mantissa do número representado no padrão \textit{IEEE-754} somado de 1, ou seja, calculamos a série de $1 + x$, codificado nas linhas 3 e 4, e apresentado na equação abaixo.
+
+$$ln(1 + x) = \sum_{n=1}^{\infty}{\frac{(-1)^{i+1}}{i}(x-1)^{n}}$$
+
+\begin{lstlisting} [caption={Implementação da função ln em C}]
+double serie(double xk){
+  double soma=0;
+  for (int i = 1; i < 100; i++){
+    soma += (pow(-1,(i+1)) / i) * pow((xk-1),i);
+  }
+}
+
+void lnd(ieee754 *x,ieee754 *res){
+  double k = x->exp;
+  double xk = (1 + x->signif);
+  *res = double_to_ieee754((x->exp * log2_e) + serie(xk));
+}
+\end{lstlisting}
+
+\subsection{Função exponencial natural}
+
+A redução do valor do argumento por meio de redução aditiva é feito nas linhas 15 e 16, para aumentar a precisão obtida. A série de Taylor para $e^x$ abaixo foi calculada nas linhas 3 à 10 e utilizando 15 termos para garantir precisão de pelo menos 10 dígitos.
+
+$$e^x = \sum_{n=0}^{\infty}{\frac{x^n}{n!}}$$
+
+\begin{lstlisting}[caption={Implementação da função \textbf{$e^x$} em C}]
+double calc_e(double x){
+  return (1 + x 
+      + (pow(x,2)/fatorial02) + (pow(x,3)/fatorial03) 
+      + (pow(x,4)/fatorial04) + (pow(x,5)/fatorial05) 
+      + (pow(x,6)/fatorial06) + (pow(x,7)/fatorial07) 
+      + (pow(x,8)/fatorial08) + (pow(x,9)/fatorial09) 
+      + (pow(x,10)/fatorial10) + (pow(x,11)/fatorial11) 
+      + (pow(x,12)/fatorial12) + (pow(x,13)/fatorial13) 
+      + (pow(x,14)/fatorial14) + (pow(x,15)/fatorial15)
+  );
+}
+void e(double x,ieee754 *res){
+  double coef = log2_e;
+  double k = (coef - x) / (-coef);
+  double x1 = x - k * coef;           
+  *res = double_to_ieee754(pow(2,k) * calc_e(x1));
+}
+\end{lstlisting}
+
+\subsection{Raiz quadrada}
+
+A redução do valor do argumento por meio de redução multiplicativa é feito nas linhas 15 e 16, para aumentar a precisão obtida. A série de Taylor para $\sqrt{x}$ abaixo foi calculada nas linhas 3 à 7 e utilizando 50 termos para garantir precisão de pelo menos 10 dígitos.
+
+$$\sqrt{x}= \sum_{n=0}^{\infty}{\frac{(-1)^{n}(2n)!}{(1-2n)n^{2}4^{n}}x^{n}}$$
+
+\begin{lstlisting}[language=Python, caption={Implementação da função $\sqrt{x}$ em Python}]
+def serie(x):
+    res = 0
+    for i in range(50):
+        res = 
+            res + 
+            ((((-1)**i) * factorial(2*i)) /
+            ((1-2*i) * (factorial(i)**2) * (4**i))) * x**i
+    return res
+
+def quad(x):    
+    k = ceil(log2(x))
+    x1 = x/2**k
+    return 2**(k/2) * serie(x1-1)
+\end{lstlisting}
+
+\newpage
+\section{Conclusão}
+Ao utilizarmos o padrão \textit{IEEE-754} reduzimos o valor do argumento ao utilizar somente a mantissa para realizar os cálculos. Mostramos ainda que é possivel reduzir o valor do argumento, aumentando assim a precisão e diminuindo o tempo de computação, ao realizar reduções aditivas ou multiplicativas. Demonstramos que é possível calcular as funções elementares com precisão razoavelmente satisfatória, 10 casas decimais, desde que utilizados as técnicas e representação apresentada.
+
+\end{document}
